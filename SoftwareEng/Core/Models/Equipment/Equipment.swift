@@ -9,7 +9,7 @@
 import Foundation
 
 // MARK: - Equipment
-struct Equipment: Codable, Identifiable {
+struct Equipment: Codable, Identifiable { // Encapsulation + Abstraction
     let id: String
     var name: String
     var category: EquipmentCategory
@@ -63,7 +63,7 @@ enum EquipmentCategory: String, Codable, CaseIterable {
         rawValue.capitalized
     }
     
-    var icon: String {
+    var icon: String { // Polymorphism
         switch self {
         case .laptop: return "laptopcomputer"
         case .camera: return "camera"
@@ -79,7 +79,7 @@ enum EquipmentCategory: String, Codable, CaseIterable {
 }
 
 // MARK: - Equipment Condition
-enum EquipmentCondition: String, Codable {
+enum EquipmentCondition: String, Codable { // Abstraction
     case excellent = "excellent"
     case good = "good"
     case fair = "fair"
@@ -89,7 +89,7 @@ enum EquipmentCondition: String, Codable {
         rawValue.capitalized
     }
     
-    var color: String {
+    var color: String { // Polymorphism
         switch self {
         case .excellent: return "Green"
         case .good: return "Blue"
@@ -100,7 +100,7 @@ enum EquipmentCondition: String, Codable {
 }
 
 // MARK: - Equipment Reservation
-struct EquipmentReservation: Codable, Identifiable {
+struct EquipmentReservation: Codable, Identifiable { // Encapsulation + Abstraction
     let id: String
     let equipmentId: String
     let userId: String
@@ -170,7 +170,7 @@ struct EquipmentReservation: Codable, Identifiable {
 }
 
 // MARK: - Equipment Search Filters
-struct EquipmentSearchFilters {
+struct EquipmentSearchFilters { // Encapsulation + Abstraction
     var category: EquipmentCategory?
     var location: String?
     var availableOnly: Bool = true

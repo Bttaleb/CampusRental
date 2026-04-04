@@ -9,9 +9,9 @@
 import Foundation
 import SwiftUI
 import Combine
-
+//MARK: OOP - Abtraction, polymorphism, encapsulation
 @MainActor
-class TutorViewModel: ObservableObject {
+class TutorViewModel: ObservableObject { // Abstraction + Polymorpshism
     // MARK: - Published Properties
     @Published var tutors: [TutorProfile] = []
     @Published var selectedTutor: TutorProfile?
@@ -21,7 +21,7 @@ class TutorViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     // MARK: - Services
-    private let tutorService = TutorService.shared
+    private let tutorService = TutorService.shared // Encapsulation
     
     // MARK: - Tutor Discovery
     
@@ -204,15 +204,15 @@ class TutorViewModel: ObservableObject {
     
     // MARK: - Computed Properties
     
-    var upcomingSessions: [TutorSession] {
+    var upcomingSessions: [TutorSession] { //Abstraction (computed filter)
         mySessions.filter { $0.status == .scheduled && $0.startTime > Date() }
     }
     
-    var pastSessions: [TutorSession] {
+    var pastSessions: [TutorSession] { // Abstraction
         mySessions.filter { $0.endTime < Date() }
     }
     
-    var availableSubjects: [String] {
+    var availableSubjects: [String] { // Abstraction
         Array(Set(tutors.flatMap { $0.subjects })).sorted()
     }
 }

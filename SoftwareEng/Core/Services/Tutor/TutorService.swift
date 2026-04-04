@@ -8,13 +8,13 @@
 
 import Foundation
 import Supabase
-
+// MARK: OOP — Encapsulation, Abstraction
 class TutorService {
-    static let shared = TutorService()
+    static let shared = TutorService() // OOP: Encapsulation — singleton; single shared instance
 
-    private let client: SupabaseClient
+    private let client: SupabaseClient // OOP: Encapsulation — private; Supabase client hidden from callers
 
-    private init() {
+    private init() { // OOP: Encapsulation — private init enforces singleton
         self.client = SupabaseClient(
             supabaseURL: URL(string: AppConstants.projectURLString)!,
             supabaseKey: AppConstants.projectAPIKey
@@ -148,7 +148,7 @@ class TutorService {
 
 // MARK: - Request Bodies
 
-private struct RatingInsert: Encodable {
+private struct RatingInsert: Encodable { // OOP: Encapsulation — private nested struct; payload shape hidden from outside the service
     let sessionId: String
     let rating: Int
     let comment: String?

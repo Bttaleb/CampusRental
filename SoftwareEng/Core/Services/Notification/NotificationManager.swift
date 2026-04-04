@@ -10,17 +10,18 @@ import Foundation
 import UserNotifications
 import Combine
 import UIKit
+//MARK: OOP - Abstraction, Encapsulation
 
 class NotificationManager: ObservableObject {
-    static let shared = NotificationManager()
+    static let shared = NotificationManager() // Encapsulation
     
-    @Published var hasPermission = false
+    @Published var hasPermission = false // Abstraaction
     @Published var notifications: [AppNotification] = []
     @Published var unreadCount = 0
     
-    private let notificationCenter = UNUserNotificationCenter.current()
+    private let notificationCenter =  UNUserNotificationCenter.current() //Encapsulation
     
-    private init() {
+    private init() { // Encapsulation
         checkPermissionStatus()
     }
     
@@ -92,7 +93,7 @@ class NotificationManager: ObservableObject {
     
     // MARK: - Update Unread Count
     
-    private func updateUnreadCount() {
+    private func updateUnreadCount() { // Encapsulation
         unreadCount = notifications.filter { !$0.isRead }.count
         notificationCenter.setBadgeCount(unreadCount)
     }

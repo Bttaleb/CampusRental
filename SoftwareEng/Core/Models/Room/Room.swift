@@ -9,7 +9,7 @@
 import Foundation
 
 // MARK: - Study Room
-struct StudyRoom: Codable, Identifiable {
+struct StudyRoom: Codable, Identifiable { // Encapsulation + Abstraction
     let id: String
     var name: String
     var building: String
@@ -52,7 +52,7 @@ struct StudyRoom: Codable, Identifiable {
 }
 
 // MARK: - Room Features
-enum RoomFeature: String, Codable, CaseIterable {
+enum RoomFeature: String, Codable, CaseIterable { // Encapsulation + Abstraction
     case whiteboard = "whiteboard"
     case projector = "projector"
     case tvScreen = "tv_screen"
@@ -61,8 +61,8 @@ enum RoomFeature: String, Codable, CaseIterable {
     case airConditioning = "air_conditioning"
     case windows = "windows"
     case powerOutlets = "power_outlets"
-    
-    var displayName: String {
+
+    var displayName: String { // Polymorphism - vary per case
         switch self {
         case .whiteboard: return "Whiteboard"
         case .projector: return "Projector"
@@ -75,7 +75,7 @@ enum RoomFeature: String, Codable, CaseIterable {
         }
     }
     
-    var icon: String {
+    var icon: String { // Polymorphism - vary per case
         switch self {
         case .whiteboard: return "pencil.and.outline"
         case .projector: return "projector"
@@ -90,7 +90,7 @@ enum RoomFeature: String, Codable, CaseIterable {
 }
 
 // MARK: - Room Booking
-struct RoomBooking: Codable, Identifiable {
+struct RoomBooking: Codable, Identifiable { // Encapsulation + Abstraction
     let id: String
     let roomId: String
     let userId: String
@@ -155,7 +155,7 @@ struct RoomBooking: Codable, Identifiable {
 }
 
 // MARK: - Room Search Filters
-struct RoomSearchFilters {
+struct RoomSearchFilters { // Encapsulation + Abstraction
     var building: String?
     var minCapacity: Int?
     var requiredFeatures: [RoomFeature] = []
@@ -194,7 +194,7 @@ struct RoomSearchFilters {
     }
 }
 
-enum RoomSortOption: String, CaseIterable {
+enum RoomSortOption: String, CaseIterable { // Abstraction + Encapsulation
     case name = "name"
     case capacity = "capacity"
     case building = "building"
@@ -205,7 +205,7 @@ enum RoomSortOption: String, CaseIterable {
 }
 
 // MARK: - Room Booking Request
-struct RoomBookingRequest: Codable {
+struct RoomBookingRequest: Codable { // Encapsulation
     let roomId: String
     let startTime: Date
     let endTime: Date

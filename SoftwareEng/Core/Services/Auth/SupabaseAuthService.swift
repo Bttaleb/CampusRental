@@ -8,9 +8,9 @@
 
 import Foundation
 import Supabase
-
+//MARK: OOP - Encapsulation, Abstraction
 struct SupabaseAuthService {
-    let client: SupabaseClient
+    let client: SupabaseClient // Encapsulation - struct-scoped
 
     init() {
         self.client = SupabaseClient(
@@ -43,6 +43,7 @@ struct SupabaseAuthService {
     // MARK: - Rich Auth (used by AuthViewModel)
 
     /// Register with full profile data, calls Supabase signUp then builds a User
+    /// Abstraction - Hides supabase response mapping
     func register(email: String, password: String, name: String, role: UserRole,
                   major: String?, year: StudentYear?) async throws -> User {
         let response = try await client.auth.signUp(email: email, password: password)
@@ -62,6 +63,7 @@ struct SupabaseAuthService {
     }
 
     /// Login and return an app User
+    /// Abstraction - hides profile fetch + fallback
     func login(email: String, password: String) async throws -> User {
         let session = try await client.auth.signIn(email: email, password: password)
         let supabaseUser = session.user

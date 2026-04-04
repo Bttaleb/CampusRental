@@ -6,10 +6,10 @@
 //
 
 import Foundation
-
+// MARK: OOP — Abstraction, Encapsulation, Inheritance
 @Observable @MainActor
-final class AuthManager {
-    private let service: SupabaseAuthService
+final class AuthManager { // OOP: Inheritance — final prevents subclassing; Encapsulation — private service; Abstraction — wraps SupabaseAuthService behind simple async methods
+    private let service: SupabaseAuthService // OOP: Encapsulation - private field restricts external access to auth service
     
     var authState: AuthenticationState = .notDetermined
     var error: Error?

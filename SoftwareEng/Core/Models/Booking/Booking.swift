@@ -9,14 +9,15 @@ import Foundation
 import SwiftUI
 import Combine
 // MARK: - Booking Status
-enum BookingStatus: String, Codable {
+// Different cases 
+enum BookingStatus: String, Codable { // Abstraction + Polymorphism
     case pending = "pending"
     case confirmed = "confirmed"
     case cancelled = "cancelled"
     case completed = "completed"
     case noShow = "no_show"
     
-    var displayName: String {
+    var displayName: String { // Polymorphism
         switch self {
         case .pending: return "Pending"
         case .confirmed: return "Confirmed"
@@ -26,7 +27,7 @@ enum BookingStatus: String, Codable {
         }
     }
     
-    var color: Color {
+    var color: Color { // Polymorphism
         switch self {
         case .pending: return ColorTheme.statusPending
         case .confirmed: return ColorTheme.statusConfirmed
@@ -36,7 +37,7 @@ enum BookingStatus: String, Codable {
         }
     }
 
-    var badgeStyle: BadgeStyle {
+    var badgeStyle: BadgeStyle { // Polymorphism
         switch self {
         case .pending: return .pending
         case .confirmed: return .confirmed
@@ -46,7 +47,7 @@ enum BookingStatus: String, Codable {
         }
     }
     
-    var icon: String {
+    var icon: String { // Polymorphism
         switch self {
         case .pending: return "clock"
         case .confirmed: return "checkmark.circle"
@@ -58,7 +59,7 @@ enum BookingStatus: String, Codable {
 }
 
 // MARK: - Booking Type
-enum BookingType: String, Codable {
+enum BookingType: String, Codable { // Abstraction + Polymorphism
     case tutor = "tutor"
     case room = "room"
     case equipment = "equipment"
@@ -81,7 +82,7 @@ enum BookingType: String, Codable {
 }
 
 // MARK: - Unified Booking (for user's booking history)
-struct UnifiedBooking: Identifiable {
+struct UnifiedBooking: Identifiable { // Encapsulaton
     let id: String
     let type: BookingType
     let title: String
@@ -116,7 +117,7 @@ struct UnifiedBooking: Identifiable {
         endTime < Date()
     }
     
-    var canCancel: Bool {
+    var canCancel: Bool { // Polymorphism
         guard status == .confirmed else { return false }
         
         switch type {
@@ -131,7 +132,7 @@ struct UnifiedBooking: Identifiable {
 }
 
 // MARK: - Cancellation Request
-struct CancellationRequest: Codable {
+struct CancellationRequest: Codable { // Abstraction + Encapsulation
     let bookingId: String
     let bookingType: BookingType
     var reason: String?
@@ -144,7 +145,7 @@ struct CancellationRequest: Codable {
 }
 
 // MARK: - Reschedule Request
-struct RescheduleRequest: Codable {
+struct RescheduleRequest: Codable { // Abstraction + Encapsulation
     let bookingId: String
     let bookingType: BookingType
     let newStartTime: Date
@@ -161,7 +162,7 @@ struct RescheduleRequest: Codable {
 }
 
 // MARK: - Booking Summary (for dashboard)
-struct BookingSummary {
+struct BookingSummary { // Abstraction + Polymorphism 
     var upcomingCount: Int
     var completedCount: Int
     var cancelledCount: Int

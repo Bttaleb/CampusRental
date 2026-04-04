@@ -6,8 +6,8 @@
 //
 
 import Foundation
-
-enum AuthenticationState {
+// MARK: OOP — Abstraction
+enum AuthenticationState { // OOP: Abstraction — named cases abstract auth lifecycle into discrete states
     case authenticated
     case notAuthenticated
     case notDetermined

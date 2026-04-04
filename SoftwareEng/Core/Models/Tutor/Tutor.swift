@@ -9,7 +9,7 @@
 import Foundation
 
 // MARK: - Tutor Profile
-struct TutorProfile: Codable, Identifiable {
+struct TutorProfile: Codable, Identifiable { // Encapsulation + Abstraction
     let id: String
     let userId: String
     var name: String
@@ -52,7 +52,7 @@ struct TutorProfile: Codable, Identifiable {
 }
 
 // MARK: - Tutor Search Filters
-struct TutorSearchFilters {
+struct TutorSearchFilters { // Encapsulation + Abstraction
     var subject: String?
     var minRate: Double?
     var maxRate: Double?

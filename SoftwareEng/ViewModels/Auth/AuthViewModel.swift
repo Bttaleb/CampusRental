@@ -9,9 +9,10 @@
 import Foundation
 import SwiftUI
 import Combine
+//MARK: OOP - Abstraction, Polymorphism, Encapsulation
 
 @MainActor
-class AuthViewModel: ObservableObject {
+class AuthViewModel: ObservableObject { // Abstraction - ObservableObject; Polymorphism - usable wherever ObservableObject expected
     // MARK: - Published Properties
     @Published var currentUser: User?
     @Published var isAuthenticated = false
@@ -19,8 +20,8 @@ class AuthViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     // MARK: - Services
-    private let authService = SupabaseAuthService()
-    private let keychainService = KeychainService.shared
+    private let authService = SupabaseAuthService() // Encapsulation
+    private let keychainService = KeychainService.shared // Encapsulation
 
     // MARK: - Initialization
     init() {
@@ -30,7 +31,7 @@ class AuthViewModel: ObservableObject {
     // MARK: - Authentication Methods
 
     /// Check if user is already authenticated via cached data
-    func checkAuthStatus() {
+    func checkAuthStatus() { // Abstraction
         if let userData = keychainService.getData(key: Config.Auth.userKey),
            let user = try? JSONDecoder().decode(User.self, from: userData) {
             self.currentUser = user
@@ -144,7 +145,7 @@ class AuthViewModel: ObservableObject {
 
     // MARK: - Validation
 
-    func validateEmail(_ email: String) -> Bool {
+    func validateEmail(_ email: String) -> Bool { // Abstraction
         let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
         let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
         return emailPredicate.evaluate(with: email)

@@ -9,11 +9,11 @@
 import Foundation
 
 // MARK: - User Model
-struct User: Codable, Identifiable {
+struct User: Codable, Identifiable { // Abstraction + Polymorphism
     let id: String
     var email: String
     var name: String
-    var photoURL: String?
+    var photoURL: String? 
     var phoneNumber: String?
     var role: UserRole
     
@@ -51,11 +51,11 @@ struct User: Codable, Identifiable {
         case updatedAt = "updated_at"
     }
     
-    var displayName: String {
+    var displayName: String { // Polymorphism - self changes who answers the call
         name.isEmpty ? email : name
     }
     
-    var isStudent: Bool {
+    var isStudent: Bool { // Abstraction - hides role comparison
         role == .student
     }
     
@@ -69,7 +69,7 @@ struct User: Codable, Identifiable {
 }
 
 // MARK: - User Role
-enum UserRole: String, Codable, CaseIterable {
+enum UserRole: String, Codable, CaseIterable { // Polymorphism - enum computed property
     case student = "student"
     case tutor = "tutor"
     case admin = "admin"
@@ -84,7 +84,7 @@ enum UserRole: String, Codable, CaseIterable {
 }
 
 // MARK: - Student Year
-enum StudentYear: String, Codable, CaseIterable {
+enum StudentYear: String, Codable, CaseIterable { // Abstraction
     case freshman = "freshman"
     case sophomore = "sophomore"
     case junior = "junior"
@@ -97,7 +97,7 @@ enum StudentYear: String, Codable, CaseIterable {
 }
 
 // MARK: - Availability Slot
-struct AvailabilitySlot: Codable, Identifiable {
+struct AvailabilitySlot: Codable, Identifiable { // Abstraction
     var id: String
     var dayOfWeek: DayOfWeek
     var startTime: String // Format: "HH:mm"

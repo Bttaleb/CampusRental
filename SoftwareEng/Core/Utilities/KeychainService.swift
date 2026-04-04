@@ -7,13 +7,15 @@
 
 import Foundation
 import Security
+// MARK: OOP - encapsulation, abstraction
 
 class KeychainService {
-    static let shared = KeychainService()
-    private init() {}
+    static let shared = KeychainService() //OOP: Encapsulation - singleton; single access point
+    
+    private init() {} // OOP: Encapsulation - private init enforces singleton
     
     // MARK: - Save Token
-    func saveToken(_ token: String, key: String) {
+    func saveToken(_ token: String, key: String) { // OOP: Abstraction — String-to-Data conversion hidden from caller
         let data = token.data(using: .utf8)!
         saveData(data, key: key)
     }
@@ -30,7 +32,7 @@ class KeychainService {
     }
     
     // MARK: - Save Data
-    func saveData(_ data: Data, key: String) {
+    func saveData(_ data: Data, key: String) { // OOP: Abstraction — SecItemDelete + SecItemAdd sequence hidden from caller
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key,
@@ -45,7 +47,7 @@ class KeychainService {
     }
     
     // MARK: - Get Data
-    func getData(key: String) -> Data? {
+    func getData(key: String) -> Data? { // OOP: Abstraction — CFDictionary query and status check hidden from caller
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key,
