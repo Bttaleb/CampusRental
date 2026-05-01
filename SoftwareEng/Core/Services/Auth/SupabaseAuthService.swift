@@ -9,7 +9,7 @@
 import Foundation
 import Supabase
 //MARK: OOP - Encapsulation, Abstraction
-struct SupabaseAuthService {
+struct SupabaseAuthService: AuthServiceProvider { // Abstraction - concrete implementation of AuthServiceProvider
     let client: SupabaseClient // Encapsulation - struct-scoped
 
     init() {

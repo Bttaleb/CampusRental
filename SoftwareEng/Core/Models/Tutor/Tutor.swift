@@ -101,7 +101,7 @@ enum TutorSortOption: String, CaseIterable {
 }
 
 // MARK: - Tutor Session
-struct TutorSession: Codable, Identifiable {
+struct TutorSession: Codable, Identifiable, Bookable {
     let id: String
     let tutorId: String
     let studentId: String
@@ -155,10 +155,18 @@ struct TutorSession: Codable, Identifiable {
     var canReschedule: Bool {
         status == .scheduled && startTime.timeIntervalSinceNow > Config.Booking.tutorCancellationDeadline
     }
+
+    var isUpcoming: Bool { // Polymorphism - vary per booking type
+        status == .scheduled && startTime > Date()
+    }
+
+    var isPast: Bool { // Abstraction - hides date comparison
+        endTime < Date()
+    }
 }
 
 // MARK: - Session Status
-enum SessionStatus: String, Codable {
+enum SessionStatus: String, Codable, StatusDisplayable {
     case scheduled = "scheduled"
     case completed = "completed"
     case cancelled = "cancelled"
@@ -179,6 +187,15 @@ enum SessionStatus: String, Codable {
         case .completed: return "Green"
         case .cancelled: return "Red"
         case .noShow: return "Orange"
+        }
+    }
+
+    var icon: String { // Polymorphism - vary per case
+        switch self {
+        case .scheduled: return "calendar.circle"
+        case .completed: return "checkmark.circle.fill"
+        case .cancelled: return "xmark.circle"
+        case .noShow: return "questionmark.circle"
         }
     }
 }

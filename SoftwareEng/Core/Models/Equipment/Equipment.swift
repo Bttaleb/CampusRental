@@ -79,7 +79,7 @@ enum EquipmentCategory: String, Codable, CaseIterable {
 }
 
 // MARK: - Equipment Condition
-enum EquipmentCondition: String, Codable { // Abstraction
+enum EquipmentCondition: String, Codable, StatusDisplayable { // Abstraction
     case excellent = "excellent"
     case good = "good"
     case fair = "fair"
@@ -97,10 +97,19 @@ enum EquipmentCondition: String, Codable { // Abstraction
         case .poor: return "Red"
         }
     }
+
+    var icon: String { // Polymorphism - vary per case
+        switch self {
+        case .excellent: return "star.fill"
+        case .good: return "checkmark.circle"
+        case .fair: return "exclamationmark.triangle"
+        case .poor: return "xmark.circle"
+        }
+    }
 }
 
 // MARK: - Equipment Reservation
-struct EquipmentReservation: Codable, Identifiable { // Encapsulation + Abstraction
+struct EquipmentReservation: Codable, Identifiable, Bookable { // Encapsulation + Abstraction
     let id: String
     let equipmentId: String
     let userId: String
@@ -166,6 +175,10 @@ struct EquipmentReservation: Codable, Identifiable { // Encapsulation + Abstract
     
     var isActive: Bool {
         status == .confirmed && checkedOutAt != nil && returnedAt == nil
+    }
+
+    var isUpcoming: Bool { // Polymorphism - vary per booking type
+        status == .confirmed && startTime > Date()
     }
 }
 

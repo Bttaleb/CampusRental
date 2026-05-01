@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 // MARK: - Booking Status
 // Different cases 
-enum BookingStatus: String, Codable { // Abstraction + Polymorphism
+enum BookingStatus: String, Codable, StatusDisplayable { // Abstraction + Polymorphism
     case pending = "pending"
     case confirmed = "confirmed"
     case cancelled = "cancelled"

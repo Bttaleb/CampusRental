@@ -90,7 +90,7 @@ enum RoomFeature: String, Codable, CaseIterable { // Encapsulation + Abstraction
 }
 
 // MARK: - Room Booking
-struct RoomBooking: Codable, Identifiable { // Encapsulation + Abstraction
+struct RoomBooking: Codable, Identifiable, Bookable { // Encapsulation + Abstraction
     let id: String
     let roomId: String
     let userId: String

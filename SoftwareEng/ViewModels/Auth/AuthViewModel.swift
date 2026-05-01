@@ -20,11 +20,12 @@ class AuthViewModel: ObservableObject { // Abstraction - ObservableObject; Polym
     @Published var errorMessage: String?
 
     // MARK: - Services
-    private let authService = SupabaseAuthService() // Encapsulation
+    private let authService: AuthServiceProvider // Encapsulation — depends on protocol, not concrete type
     private let keychainService = KeychainService.shared // Encapsulation
 
     // MARK: - Initialization
-    init() {
+    init(authService: AuthServiceProvider = SupabaseAuthService()) { // Abstraction - callers inject any AuthServiceProvider
+        self.authService = authService
         checkAuthStatus()
     }
 

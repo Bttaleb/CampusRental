@@ -58,7 +58,7 @@ struct AppNotification: Codable, Identifiable {
 }
 
 // MARK: - Notification Type
-enum NotificationType: String, Codable {
+enum NotificationType: String, Codable, StatusDisplayable {
     case bookingConfirmed = "booking_confirmed"
     case bookingCancelled = "booking_cancelled"
     case bookingReminder = "booking_reminder"
