@@ -10,7 +10,7 @@ import SwiftUI
 struct TutorListView: View {
     @StateObject private var viewModel = TutorViewModel()
     @State private var searchText = ""
-    
+
     var body: some View {
         NavigationStack {
             Group {
@@ -24,7 +24,12 @@ struct TutorListView: View {
                     )
                 } else {
                     List(filteredTutors) { tutor in
-                        TutorRowView(tutor: tutor)
+                        NavigationLink(value: tutor) {
+                            TutorRowView(tutor: tutor)
+                        }
+                    }
+                    .navigationDestination(for: TutorProfile.self) { tutor in
+                        TutorDetailView(tutor: tutor)
                     }
                     .listStyle(.plain)
                 }
@@ -44,16 +49,16 @@ struct TutorListView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
-        }
+        }.navigationTitle("Tutors")
     }
-    
+
     private var filteredTutors: [TutorProfile] {
         if searchText.isEmpty {
             return viewModel.tutors
         }
         return viewModel.tutors.filter { tutor in
-            tutor.name.localizedCaseInsensitiveContains(searchText) ||
-            tutor.subjects.contains { $0.localizedCaseInsensitiveContains(searchText) }
+            tutor.name.localizedCaseInsensitiveContains(searchText)
+                || tutor.subjects.contains { $0.localizedCaseInsensitiveContains(searchText) }
         }
     }
 }

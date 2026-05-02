@@ -9,18 +9,18 @@
 import Foundation
 
 // MARK: - User Model
-struct User: Codable, Identifiable { // Abstraction + Polymorphism
+struct User: Codable, Identifiable {  // Abstraction + Polymorphism
     let id: String
     var email: String
     var name: String
-    var photoURL: String? 
+    var photoURL: String?
     var phoneNumber: String?
     var role: UserRole
-    
+
     // Student-specific fields
     var major: String?
     var year: StudentYear?
-    
+
     // Tutor-specific fields
     var subjects: [String]?
     var hourlyRate: Double?
@@ -28,10 +28,10 @@ struct User: Codable, Identifiable { // Abstraction + Polymorphism
     var rating: Double?
     var totalSessions: Int?
     var bio: String?
-    
+
     var createdAt: Date
     var updatedAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case email
@@ -50,30 +50,30 @@ struct User: Codable, Identifiable { // Abstraction + Polymorphism
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
-    
-    var displayName: String { // Polymorphism - self changes who answers the call
+
+    var displayName: String {  // Polymorphism - self changes who answers the call
         name.isEmpty ? email : name
     }
-    
-    var isStudent: Bool { // Abstraction - hides role comparison
+
+    var isStudent: Bool {  // Abstraction - hides role comparison
         role == .student
     }
-    
+
     var isTutor: Bool {
         role == .tutor
     }
-    
+
     var isAdmin: Bool {
         role == .admin
     }
 }
 
 // MARK: - User Role
-enum UserRole: String, Codable, CaseIterable { // Polymorphism - enum computed property
+enum UserRole: String, Codable, CaseIterable {  // Polymorphism - enum computed property
     case student = "student"
     case tutor = "tutor"
     case admin = "admin"
-    
+
     var displayName: String {
         switch self {
         case .student: return "Student"
@@ -84,26 +84,26 @@ enum UserRole: String, Codable, CaseIterable { // Polymorphism - enum computed p
 }
 
 // MARK: - Student Year
-enum StudentYear: String, Codable, CaseIterable { // Abstraction
+enum StudentYear: String, Codable, CaseIterable {  // Abstraction
     case freshman = "freshman"
     case sophomore = "sophomore"
     case junior = "junior"
     case senior = "senior"
     case graduate = "graduate"
-    
+
     var displayName: String {
         rawValue.capitalized
     }
 }
 
 // MARK: - Availability Slot
-struct AvailabilitySlot: Codable, Identifiable { // Abstraction
+struct AvailabilitySlot: Codable, Identifiable, Hashable {  // Abstraction
     var id: String
     var dayOfWeek: DayOfWeek
-    var startTime: String // Format: "HH:mm"
-    var endTime: String   // Format: "HH:mm"
+    var startTime: String  // Format: "HH:mm"
+    var endTime: String  // Format: "HH:mm"
     var isAvailable: Bool
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case dayOfWeek = "day_of_week"
@@ -121,7 +121,7 @@ enum DayOfWeek: String, Codable, CaseIterable {
     case friday = "friday"
     case saturday = "saturday"
     case sunday = "sunday"
-    
+
     var displayName: String {
         rawValue.capitalized
     }
@@ -153,7 +153,7 @@ struct ProfileUpdateRequest: Codable {
     var subjects: [String]?
     var hourlyRate: Double?
     var bio: String?
-    
+
     enum CodingKeys: String, CodingKey {
         case name
         case phoneNumber = "phone_number"

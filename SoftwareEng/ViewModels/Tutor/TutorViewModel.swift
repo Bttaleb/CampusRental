@@ -21,7 +21,12 @@ class TutorViewModel: ObservableObject { // Abstraction + Polymorpshism
     @Published var errorMessage: String?
     
     // MARK: - Services
-    private let tutorService = TutorService.shared // Encapsulation
+    private let tutorService: TutorServiceProvider // DIP — depend on abstraction, not concrete type
+
+    // Dependency Injection — composition root supplies the backend (Supabase, mock, etc.)
+    init(tutorService: TutorServiceProvider = SupabaseTutorService()) {
+        self.tutorService = tutorService
+    }
     
     // MARK: - Tutor Discovery
     

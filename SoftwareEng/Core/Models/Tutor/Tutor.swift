@@ -9,7 +9,7 @@
 import Foundation
 
 // MARK: - Tutor Profile
-struct TutorProfile: Codable, Identifiable { // Encapsulation + Abstraction
+struct TutorProfile: Codable, Identifiable, Hashable {  // Encapsulation + Abstraction
     let id: String
     let userId: String
     var name: String
@@ -24,7 +24,7 @@ struct TutorProfile: Codable, Identifiable { // Encapsulation + Abstraction
     var isApproved: Bool
     var createdAt: Date
     var updatedAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"
@@ -41,28 +41,28 @@ struct TutorProfile: Codable, Identifiable { // Encapsulation + Abstraction
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
-    
+
     var formattedRate: String {
         String(format: "$%.2f/hr", hourlyRate)
     }
-    
+
     var ratingDisplay: String {
         String(format: "%.1f", rating)
     }
 }
 
 // MARK: - Tutor Search Filters
-struct TutorSearchFilters { // Encapsulation + Abstraction
+struct TutorSearchFilters {  // Encapsulation + Abstraction
     var subject: String?
     var minRate: Double?
     var maxRate: Double?
     var minRating: Double?
     var availableOn: DayOfWeek?
     var sortBy: TutorSortOption = .rating
-    
+
     var queryParameters: [String: String] {
         var params: [String: String] = [:]
-        
+
         if let subject = subject {
             params["subject"] = subject
         }
@@ -79,7 +79,7 @@ struct TutorSearchFilters { // Encapsulation + Abstraction
             params["available_on"] = availableOn.rawValue
         }
         params["sort_by"] = sortBy.rawValue
-        
+
         return params
     }
 }
@@ -89,7 +89,7 @@ enum TutorSortOption: String, CaseIterable {
     case price = "price"
     case sessions = "sessions"
     case name = "name"
-    
+
     var displayName: String {
         switch self {
         case .rating: return "Rating"
@@ -115,7 +115,7 @@ struct TutorSession: Codable, Identifiable, Bookable {
     var meetingLink: String?
     var createdAt: Date
     var updatedAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case tutorId = "tutor_id"
@@ -131,36 +131,38 @@ struct TutorSession: Codable, Identifiable, Bookable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
-    
+
     var duration: TimeInterval {
         endTime.timeIntervalSince(startTime)
     }
-    
+
     var formattedDuration: String {
         let hours = Int(duration) / 3600
         let minutes = (Int(duration) % 3600) / 60
         return hours > 0 ? "\(hours)h \(minutes)m" : "\(minutes)m"
     }
-    
+
     var formattedTimeRange: String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return "\(formatter.string(from: startTime)) - \(formatter.string(from: endTime))"
     }
-    
+
     var canCancel: Bool {
-        status == .scheduled && startTime.timeIntervalSinceNow > Config.Booking.tutorCancellationDeadline
-    }
-    
-    var canReschedule: Bool {
-        status == .scheduled && startTime.timeIntervalSinceNow > Config.Booking.tutorCancellationDeadline
+        status == .scheduled
+            && startTime.timeIntervalSinceNow > Config.Booking.tutorCancellationDeadline
     }
 
-    var isUpcoming: Bool { // Polymorphism - vary per booking type
+    var canReschedule: Bool {
+        status == .scheduled
+            && startTime.timeIntervalSinceNow > Config.Booking.tutorCancellationDeadline
+    }
+
+    var isUpcoming: Bool {  // Polymorphism - vary per booking type
         status == .scheduled && startTime > Date()
     }
 
-    var isPast: Bool { // Abstraction - hides date comparison
+    var isPast: Bool {  // Abstraction - hides date comparison
         endTime < Date()
     }
 }
@@ -171,7 +173,7 @@ enum SessionStatus: String, Codable, StatusDisplayable {
     case completed = "completed"
     case cancelled = "cancelled"
     case noShow = "no_show"
-    
+
     var displayName: String {
         switch self {
         case .scheduled: return "Scheduled"
@@ -180,7 +182,7 @@ enum SessionStatus: String, Codable, StatusDisplayable {
         case .noShow: return "No Show"
         }
     }
-    
+
     var color: String {
         switch self {
         case .scheduled: return "Blue"
@@ -190,7 +192,7 @@ enum SessionStatus: String, Codable, StatusDisplayable {
         }
     }
 
-    var icon: String { // Polymorphism - vary per case
+    var icon: String {  // Polymorphism - vary per case
         switch self {
         case .scheduled: return "calendar.circle"
         case .completed: return "checkmark.circle.fill"
@@ -207,7 +209,7 @@ struct TutorBookingRequest: Codable {
     let startTime: Date
     let endTime: Date
     var notes: String?
-    
+
     enum CodingKeys: String, CodingKey {
         case tutorId = "tutor_id"
         case subject
@@ -223,10 +225,10 @@ struct TutorRating: Codable, Identifiable {
     let tutorId: String
     let studentId: String
     let sessionId: String
-    var rating: Int // 1-5
+    var rating: Int  // 1-5
     var comment: String?
     var createdAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case tutorId = "tutor_id"

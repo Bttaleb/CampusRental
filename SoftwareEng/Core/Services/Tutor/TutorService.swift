@@ -3,27 +3,28 @@
 //  CampusBookingSystem
 //
 //  Epic 2: Tutor Booking
-//  Service layer for tutor-related API operations using Supabase
+//  Concrete Supabase-backed implementation of TutorServiceProvider
 //
 
 import Foundation
 import Supabase
 // MARK: OOP — Encapsulation, Abstraction
-class TutorService {
-    static let shared = TutorService() // OOP: Encapsulation — singleton; single shared instance
+struct SupabaseTutorService: TutorServiceProvider { // Abstraction — concrete implementation of TutorServiceProvider
+    private let client: SupabaseClient // Encapsulation — Supabase client hidden from callers
 
-    private let client: SupabaseClient // OOP: Encapsulation — private; Supabase client hidden from callers
+    init(client: SupabaseClient) { // Dependency Injection — client supplied by composition root
+        self.client = client
+    }
 
-    private init() { // OOP: Encapsulation — private init enforces singleton
-        self.client = SupabaseClient(
+    init() {
+        self.init(client: SupabaseClient(
             supabaseURL: URL(string: AppConstants.projectURLString)!,
             supabaseKey: AppConstants.projectAPIKey
-        )
+        ))
     }
 
     // MARK: - Tutor Discovery
 
-    /// Search tutors with optional filters
     func searchTutors(filters: TutorSearchFilters) async throws -> [TutorProfile] {
         var query = client.from("tutor_profiles").select()
 
@@ -40,7 +41,6 @@ class TutorService {
             query = query.gte("rating", value: minRating)
         }
 
-        // Order returns a different builder type, so apply it in the final chain
         let orderColumn: String
         let ascending: Bool
         switch filters.sortBy {
@@ -61,7 +61,6 @@ class TutorService {
         return try await query.order(orderColumn, ascending: ascending).execute().value
     }
 
-    /// Get specific tutor profile
     func getTutorProfile(id: String) async throws -> TutorProfile {
         return try await client.from("tutor_profiles")
             .select()
@@ -73,7 +72,6 @@ class TutorService {
 
     // MARK: - Session Management
 
-    /// Book a tutoring session
     func bookSession(request: TutorBookingRequest) async throws -> TutorSession {
         return try await client.from("tutor_sessions")
             .insert(request)
@@ -83,7 +81,6 @@ class TutorService {
             .value
     }
 
-    /// Get user's tutoring sessions
     func getUserSessions() async throws -> [TutorSession] {
         guard let userId = try? await client.auth.session.user.id.uuidString else {
             return []
@@ -97,7 +94,6 @@ class TutorService {
             .value
     }
 
-    /// Cancel a session
     func cancelSession(id: String) async throws {
         try await client.from("tutor_sessions")
             .update(["status": "cancelled"])
@@ -105,7 +101,6 @@ class TutorService {
             .execute()
     }
 
-    /// Reschedule a session
     func rescheduleSession(id: String, newStartTime: Date, newEndTime: Date) async throws -> TutorSession {
         let formatter = ISO8601DateFormatter()
         return try await client.from("tutor_sessions")
@@ -122,7 +117,6 @@ class TutorService {
 
     // MARK: - Availability
 
-    /// Get tutor availability for a specific date
     func getTutorAvailability(tutorId: String, date: Date) async throws -> [TimeSlot] {
         let formatter = ISO8601DateFormatter()
         let dateString = formatter.string(from: date)
@@ -137,7 +131,6 @@ class TutorService {
 
     // MARK: - Ratings
 
-    /// Rate a completed session
     func rateSession(sessionId: String, rating: Int, comment: String?) async throws {
         let ratingData = RatingInsert(sessionId: sessionId, rating: rating, comment: comment)
         try await client.from("tutor_ratings")
@@ -148,7 +141,7 @@ class TutorService {
 
 // MARK: - Request Bodies
 
-private struct RatingInsert: Encodable { // OOP: Encapsulation — private nested struct; payload shape hidden from outside the service
+private struct RatingInsert: Encodable { // Encapsulation — payload shape hidden from outside the service
     let sessionId: String
     let rating: Int
     let comment: String?
