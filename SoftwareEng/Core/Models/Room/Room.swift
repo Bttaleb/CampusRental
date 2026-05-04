@@ -9,7 +9,7 @@
 import Foundation
 
 // MARK: - Study Room
-struct StudyRoom: Codable, Identifiable { // Encapsulation + Abstraction
+struct StudyRoom: Codable, Identifiable, Hashable { // Encapsulation + Abstraction
     let id: String
     var name: String
     var building: String
@@ -90,7 +90,7 @@ enum RoomFeature: String, Codable, CaseIterable { // Encapsulation + Abstraction
 }
 
 // MARK: - Room Booking
-struct RoomBooking: Codable, Identifiable, Bookable { // Encapsulation + Abstraction
+struct RoomBooking: Codable, Identifiable, Rentable { // Encapsulation + Abstraction
     let id: String
     let roomId: String
     let userId: String
@@ -119,38 +119,36 @@ struct RoomBooking: Codable, Identifiable, Bookable { // Encapsulation + Abstrac
         case updatedAt = "updated_at"
     }
     
-    var duration: TimeInterval {
-        endTime.timeIntervalSince(startTime)
-    }
-    
     var formattedDuration: String {
         let hours = Int(duration) / 3600
         let minutes = (Int(duration) % 3600) / 60
         return hours > 0 ? "\(hours)h \(minutes)m" : "\(minutes)m"
     }
-    
+
     var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter.string(from: startTime)
     }
-    
-    var formattedTimeRange: String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return "\(formatter.string(from: startTime)) - \(formatter.string(from: endTime))"
-    }
-    
+
     var canCancel: Bool {
         status == .confirmed && startTime.timeIntervalSinceNow > Config.Booking.roomCancellationDeadline
     }
-    
+
     var isUpcoming: Bool {
         status == .confirmed && startTime > Date()
     }
-    
-    var isPast: Bool {
-        endTime < Date()
+
+    var displayTitle: String { room?.fullName ?? "Study Room" }
+
+    func cancel() async throws {
+        guard let svc = RentalServices.shared.room else { throw RentableError.serviceUnavailable }
+        try await svc.cancel(id: id)
+    }
+
+    func reschedule(to start: Date, end: Date) async throws -> RoomBooking {
+        guard let svc = RentalServices.shared.room else { throw RentableError.serviceUnavailable }
+        return try await svc.reschedule(id: id, newStartTime: start, newEndTime: end)
     }
 }
 

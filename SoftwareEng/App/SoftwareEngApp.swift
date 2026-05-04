@@ -32,6 +32,10 @@ struct SoftwareEngApp: App {
     
     // MARK: - Configuration
     private func configureApp() {
+        // Wire rental services so Rentable conformers can route cancel/reschedule.
+        RentalServices.shared.tutor = SupabaseTutorService()
+        RentalServices.shared.room = SupabaseRoomService()
+
         // Configure navigation bar appearance with WSU Green
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()

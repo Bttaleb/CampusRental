@@ -101,7 +101,7 @@ enum TutorSortOption: String, CaseIterable {
 }
 
 // MARK: - Tutor Session
-struct TutorSession: Codable, Identifiable, Bookable {
+struct TutorSession: Codable, Identifiable, Rentable {
     let id: String
     let tutorId: String
     let studentId: String
@@ -132,28 +132,13 @@ struct TutorSession: Codable, Identifiable, Bookable {
         case updatedAt = "updated_at"
     }
 
-    var duration: TimeInterval {
-        endTime.timeIntervalSince(startTime)
-    }
-
     var formattedDuration: String {
         let hours = Int(duration) / 3600
         let minutes = (Int(duration) % 3600) / 60
         return hours > 0 ? "\(hours)h \(minutes)m" : "\(minutes)m"
     }
 
-    var formattedTimeRange: String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return "\(formatter.string(from: startTime)) - \(formatter.string(from: endTime))"
-    }
-
     var canCancel: Bool {
-        status == .scheduled
-            && startTime.timeIntervalSinceNow > Config.Booking.tutorCancellationDeadline
-    }
-
-    var canReschedule: Bool {
         status == .scheduled
             && startTime.timeIntervalSinceNow > Config.Booking.tutorCancellationDeadline
     }
@@ -162,8 +147,16 @@ struct TutorSession: Codable, Identifiable, Bookable {
         status == .scheduled && startTime > Date()
     }
 
-    var isPast: Bool {  // Abstraction - hides date comparison
-        endTime < Date()
+    var displayTitle: String { subject }
+
+    func cancel() async throws {
+        guard let svc = RentalServices.shared.tutor else { throw RentableError.serviceUnavailable }
+        try await svc.cancelSession(id: id)
+    }
+
+    func reschedule(to start: Date, end: Date) async throws -> TutorSession {
+        guard let svc = RentalServices.shared.tutor else { throw RentableError.serviceUnavailable }
+        return try await svc.rescheduleSession(id: id, newStartTime: start, newEndTime: end)
     }
 }
 

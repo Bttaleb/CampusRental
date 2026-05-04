@@ -109,7 +109,7 @@ enum EquipmentCondition: String, Codable, StatusDisplayable { // Abstraction
 }
 
 // MARK: - Equipment Reservation
-struct EquipmentReservation: Codable, Identifiable, Bookable { // Encapsulation + Abstraction
+struct EquipmentReservation: Codable, Identifiable, Rentable { // Encapsulation + Abstraction
     let id: String
     let equipmentId: String
     let userId: String
@@ -142,10 +142,6 @@ struct EquipmentReservation: Codable, Identifiable, Bookable { // Encapsulation 
         case updatedAt = "updated_at"
     }
     
-    var duration: TimeInterval {
-        endTime.timeIntervalSince(startTime)
-    }
-    
     var formattedDuration: String {
         let days = Int(duration) / 86400
         if days > 0 {
@@ -154,31 +150,41 @@ struct EquipmentReservation: Codable, Identifiable, Bookable { // Encapsulation 
         let hours = Int(duration) / 3600
         return "\(hours) hour\(hours > 1 ? "s" : "")"
     }
-    
+
     var formattedDateRange: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return "\(formatter.string(from: startTime)) - \(formatter.string(from: endTime))"
     }
-    
+
     var canReturn: Bool {
         status == .confirmed && checkedOutAt != nil && returnedAt == nil
     }
-    
+
     var canCancel: Bool {
         status == .confirmed && startTime.timeIntervalSinceNow > Config.Booking.equipmentCancellationDeadline
     }
-    
+
     var isOverdue: Bool {
         status == .confirmed && endTime < Date() && returnedAt == nil
     }
-    
+
     var isActive: Bool {
         status == .confirmed && checkedOutAt != nil && returnedAt == nil
     }
 
     var isUpcoming: Bool { // Polymorphism - vary per booking type
         status == .confirmed && startTime > Date()
+    }
+
+    var displayTitle: String { equipment?.name ?? "Equipment" }
+
+    func cancel() async throws {
+        throw RentableError.notImplemented
+    }
+
+    func reschedule(to start: Date, end: Date) async throws -> EquipmentReservation {
+        throw RentableError.notImplemented
     }
 }
 

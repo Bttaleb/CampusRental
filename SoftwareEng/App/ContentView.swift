@@ -61,13 +61,20 @@ struct MainTabView: View {
                     Label("Equipment", systemImage: "laptopcomputer")
                 }
                 .tag(3)
-            
+
+            // My Rentals (unified across tutor, room, equipment via Rentable)
+            MyRentalsView()
+                .tabItem {
+                    Label("Rentals", systemImage: "tray.full")
+                }
+                .tag(4)
+
             // Profile
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.circle.fill")
                 }
-                .tag(4)
+                .tag(5)
         }
         .accentColor(ColorTheme.wsuGreen)
     }
