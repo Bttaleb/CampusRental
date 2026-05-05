@@ -18,9 +18,16 @@ struct MyRentalsView: View {
                     Section("Upcoming") {
                         ForEach(vm.upcoming.indices, id: \.self) { i in
                             let rental = vm.upcoming[i]
-                            AnyRentalRow(rental: rental) {
-                                Task { await vm.cancel(rental) }
-                            }
+                            AnyRentalRow(rental: rental, onCancel: nil)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    if rental.canCancel {
+                                        Button(role: .destructive) {
+                                            Task { await vm.cancel(rental) }
+                                        } label: {
+                                            Label("Cancel", systemImage: "xmark.circle")
+                                        }
+                                    }
+                                }
                         }
                     }
                 }

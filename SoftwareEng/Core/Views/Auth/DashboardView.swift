@@ -2,45 +2,79 @@
 //  DashboardView.swift
 //  CampusBookingSystem
 //
-//  Main dashboard showing user's bookings and quick actions
+//  Main dashboard — surfaces the user's rentals via the unified Rentable feed.
 //
 
 import SwiftUI
-import Combine
 
 struct DashboardView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
-    @StateObject private var viewModel = DashboardViewModel()
-    
+    @StateObject private var vm = RentalsViewModel()
+
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: Spacing.lg) {
-                    // Welcome Header
+            List {
+                Section {
                     welcomeHeader
-
-                    // Quick Stats
-                    statsSection
-
-                    // Upcoming Bookings
-                    upcomingBookingsSection
-
-                    // Quick Actions
-                    quickActionsSection
                 }
-                .padding(Spacing.md)
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: Spacing.md, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
+
+                Section {
+                    statsSection
+                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
+
+                Section("Upcoming") {
+                    if vm.isLoading && vm.rentals.isEmpty {
+                        HStack { Spacer(); ProgressView(); Spacer() }
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                    } else if vm.upcoming.isEmpty {
+                        ContentUnavailableView(
+                            "No Upcoming Rentals",
+                            systemImage: "calendar.badge.exclamationmark",
+                            description: Text("Book a tutor, study room, or equipment to get started.")
+                        )
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                    } else {
+                        ForEach(vm.upcoming.indices, id: \.self) { i in
+                            let rental = vm.upcoming[i]
+                            AnyRentalRow(rental: rental, onCancel: nil)
+                                .listRowBackground(ColorTheme.cardBackground)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    if rental.canCancel {
+                                        Button(role: .destructive) {
+                                            Task { await vm.cancel(rental) }
+                                        } label: {
+                                            Label("Cancel", systemImage: "xmark.circle")
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
             .background(ColorTheme.background)
             .navigationTitle("Dashboard")
-            .refreshable {
-                await viewModel.refresh()
-            }
-            .task {
-                await viewModel.loadData()
-            }
+            .refreshable { await vm.load() }
+            .task { await vm.load() }
+            .alert("Error", isPresented: .constant(vm.errorMessage != nil), actions: {
+                Button("OK") { vm.errorMessage = nil }
+            }, message: {
+                Text(vm.errorMessage ?? "")
+            })
         }
     }
-    
+
+    // MARK: - Sections
+
     private var welcomeHeader: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Welcome back,")
@@ -52,107 +86,48 @@ struct DashboardView: View {
                 .fontWeight(.bold)
                 .foregroundColor(ColorTheme.textPrimary)
         }
-        .padding(.bottom, Spacing.xs)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
+
     private var statsSection: some View {
-        HStack(spacing: Spacing.sm) {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
             StatCard(
                 title: "Upcoming",
-                value: "\(viewModel.upcomingCount)",
+                value: "\(vm.upcoming.count)",
                 icon: "calendar",
                 color: ColorTheme.wsuGreen
             )
-
+            StatCard(
+                title: "Reservations / Sessions",
+                value: "\(vm.rentals.count)",
+                icon: "tray.full",
+                color: ColorTheme.info
+            )
             StatCard(
                 title: "Completed",
-                value: "\(viewModel.completedCount)",
+                value: "\(vm.past.count)",
                 icon: "checkmark.circle",
                 color: ColorTheme.statusCompleted
             )
-
             StatCard(
                 title: "This Week",
-                value: "\(viewModel.weeklyCount)",
+                value: "\(thisWeekCount)",
                 icon: "clock",
                 color: ColorTheme.wsuGold
             )
         }
     }
-    
-    private var upcomingBookingsSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack {
-                Text("Upcoming Bookings")
-                    .wsuSectionHeader()
-                Spacer()
-                NavigationLink("See All") {
-                    // BookingsListView()
-                }
-                .font(.subheadline)
-                .foregroundColor(ColorTheme.wsuGold)
-            }
-            
-            if viewModel.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-            } else if viewModel.upcomingBookings.isEmpty {
-                ContentUnavailableView(
-                    "No Upcoming Bookings",
-                    systemImage: "calendar.badge.exclamationmark",
-                    description: Text("Book a tutor, study room, or equipment to get started")
-                )
-            } else {
-                ForEach(viewModel.upcomingBookings.prefix(3)) { booking in
-                    BookingCard(booking: booking)
-                }
-            }
-        }
-    }
-    
-    private var quickActionsSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Quick Actions")
-                .wsuSectionHeader()
 
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
-                QuickActionButton(
-                    title: "Find Tutor",
-                    icon: "person.2.fill",
-                    color: ColorTheme.wsuGreen
-                ) {
-                    // Navigate to tutors
-                }
+    // MARK: - Computed
 
-                QuickActionButton(
-                    title: "Book Room",
-                    icon: "building.2.fill",
-                    color: ColorTheme.statusCompleted
-                ) {
-                    // Navigate to rooms
-                }
-
-                QuickActionButton(
-                    title: "Rent Equipment",
-                    icon: "laptopcomputer",
-                    color: ColorTheme.wsuGold
-                ) {
-                    // Navigate to equipment
-                }
-
-                QuickActionButton(
-                    title: "My Bookings",
-                    icon: "list.bullet.rectangle",
-                    color: ColorTheme.info
-                ) {
-                    // Navigate to bookings
-                }
-            }
-        }
+    private var thisWeekCount: Int {
+        let now = Date()
+        let weekFromNow = Calendar.current.date(byAdding: .day, value: 7, to: now) ?? now
+        return vm.upcoming.filter { $0.startTime >= now && $0.startTime <= weekFromNow }.count
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - Stat Card
 
 struct StatCard: View {
     let title: String
@@ -173,93 +148,12 @@ struct StatCard: View {
 
             Text(title)
                 .font(.caption)
+                .multilineTextAlignment(.center)
                 .foregroundColor(ColorTheme.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(Spacing.md)
         .wsuCard()
-    }
-}
-
-struct BookingCard: View {
-    let booking: UnifiedBooking
-
-    var body: some View {
-        HStack(spacing: Spacing.sm) {
-            Image(systemName: booking.type.icon)
-                .font(.title2)
-                .foregroundColor(booking.status.color)
-                .frame(width: 40)
-
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(booking.title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(ColorTheme.textPrimary)
-
-                Text(booking.subtitle)
-                    .font(.caption)
-                    .foregroundColor(ColorTheme.textSecondary)
-
-                Text(booking.formattedTimeRange)
-                    .font(.caption2)
-                    .foregroundColor(ColorTheme.textSecondary)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(ColorTheme.textSecondary)
-        }
-        .padding(Spacing.md)
-        .wsuCard()
-    }
-}
-
-struct QuickActionButton: View {
-    let title: String
-    let icon: String
-    let color: Color
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: Spacing.xs) {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(color)
-
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(ColorTheme.textPrimary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(Spacing.md)
-            .wsuCard()
-        }
-    }
-}
-
-// MARK: - Dashboard ViewModel
-@MainActor
-class DashboardViewModel: ObservableObject {
-    @Published var upcomingBookings: [UnifiedBooking] = []
-    @Published var upcomingCount = 0
-    @Published var completedCount = 0
-    @Published var weeklyCount = 0
-    @Published var isLoading = false
-    
-    func loadData() async {
-        isLoading = true
-        // Fetch data from backend
-        // Placeholder implementation
-        isLoading = false
-    }
-    
-    func refresh() async {
-        await loadData()
     }
 }
 
