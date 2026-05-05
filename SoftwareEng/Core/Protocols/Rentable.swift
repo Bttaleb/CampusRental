@@ -70,6 +70,6 @@ final class RentalServices {
     static let shared = RentalServices()
     var tutor: TutorServiceProvider?
     var room: RoomServiceProvider?
-    // Equipment service not yet implemented; slot reserved.
+    var equipment: EquipmentServiceProvider?
     private init() {}
 }

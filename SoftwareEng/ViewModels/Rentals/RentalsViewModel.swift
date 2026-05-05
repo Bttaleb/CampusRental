@@ -18,13 +18,16 @@ final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
 
     private let tutorService: TutorServiceProvider
     private let roomService: RoomServiceProvider
+    private let equipmentService: EquipmentServiceProvider
 
     init(
         tutorService: TutorServiceProvider = SupabaseTutorService(),
-        roomService: RoomServiceProvider = SupabaseRoomService()
+        roomService: RoomServiceProvider = SupabaseRoomService(),
+        equipmentService: EquipmentServiceProvider = SupabaseEquipmentService()
     ) {
         self.tutorService = tutorService
         self.roomService = roomService
+        self.equipmentService = equipmentService
     }
 
     func load() async {
@@ -48,7 +51,13 @@ final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
         } catch {
             firstError = firstError ?? error.localizedDescription
         }
-        // Equipment service not yet implemented; fold it in here once it exists.
+
+        do {
+            let reservations = try await equipmentService.getUserReservations()
+            collected.append(contentsOf: reservations.map { $0 as any Rentable })
+        } catch {
+            firstError = firstError ?? error.localizedDescription
+        }
 
         if let firstError, collected.isEmpty {
             errorMessage = firstError

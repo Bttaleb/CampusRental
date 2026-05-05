@@ -180,11 +180,13 @@ struct EquipmentReservation: Codable, Identifiable, Rentable { // Encapsulation 
     var displayTitle: String { equipment?.name ?? "Equipment" }
 
     func cancel() async throws {
-        throw RentableError.notImplemented
+        guard let svc = RentalServices.shared.equipment else { throw RentableError.serviceUnavailable }
+        try await svc.cancel(id: id)
     }
 
     func reschedule(to start: Date, end: Date) async throws -> EquipmentReservation {
-        throw RentableError.notImplemented
+        guard let svc = RentalServices.shared.equipment else { throw RentableError.serviceUnavailable }
+        return try await svc.reschedule(id: id, newStartTime: start, newEndTime: end)
     }
 }
 
