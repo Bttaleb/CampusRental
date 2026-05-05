@@ -33,6 +33,7 @@ struct SupabaseEquipmentService: EquipmentServiceProvider {
     func search(filters: EquipmentSearchFilters) async throws -> [Equipment] {
         var query = client.from("equipment").select()
         
+        if let location = filters.location {
             query = query.eq("location", value: location)
         }
         
