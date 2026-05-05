@@ -9,7 +9,7 @@
 import Foundation
 
 // MARK: - Equipment
-struct Equipment: Codable, Identifiable { // Encapsulation + Abstraction
+struct Equipment: Codable, Identifiable, Hashable { // Encapsulation + Abstraction
     let id: String
     var name: String
     var category: EquipmentCategory

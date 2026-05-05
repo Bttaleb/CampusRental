@@ -23,7 +23,7 @@ final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
     init(
         tutorService: TutorServiceProvider = SupabaseTutorService(),
         roomService: RoomServiceProvider = SupabaseRoomService(),
-        equipmentService: EquipmentServiceProvider = SupabaseEquipmentService()
+        equipmentService: EquipmentServiceProvider = MockEquipmentService.shared
     ) {
         self.tutorService = tutorService
         self.roomService = roomService

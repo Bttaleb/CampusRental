@@ -9,6 +9,10 @@
 import Foundation
 
 final class MockEquipmentService: EquipmentServiceProvider { // Polymorphism + Abstraction
+    /// Shared in-memory store so every screen (list, detail, rentals) sees the
+    /// same reservations during a simulator session.
+    static let shared = MockEquipmentService()
+
     private var equipment: [Equipment]
     private var reservations: [EquipmentReservation] = []
     private let mockUserId = "mock-user-id"
@@ -58,12 +62,21 @@ final class MockEquipmentService: EquipmentServiceProvider { // Polymorphism + A
     // MARK: - Reservation Management
 
     func rent(request: EquipmentReservationRequest) async throws -> EquipmentReservation {
+        guard let idx = equipment.firstIndex(where: { $0.id == request.equipmentId }) else {
+            throw NSError(domain: "MockEquipmentService", code: 404,
+                          userInfo: [NSLocalizedDescriptionKey: "Equipment not found"])
+        }
+        guard equipment[idx].isAvailable else {
+            throw EquipmentServiceError.timeSlotConflict
+        }
+        equipment[idx].isAvailable = false
+
         let now = Date()
         let reservation = EquipmentReservation(
             id: UUID().uuidString,
             equipmentId: request.equipmentId,
             userId: mockUserId,
-            equipment: equipment.first { $0.id == request.equipmentId },
+            equipment: equipment[idx],
             user: nil,
             startTime: request.startTime,
             endTime: request.endTime,
@@ -90,6 +103,10 @@ final class MockEquipmentService: EquipmentServiceProvider { // Polymorphism + A
         var r = reservations[idx]
         r.status = .cancelled
         reservations[idx] = r
+
+        if let eqIdx = equipment.firstIndex(where: { $0.id == r.equipmentId }) {
+            equipment[eqIdx].isAvailable = true
+        }
     }
 
     func reschedule(id: String, newStartTime: Date, newEndTime: Date) async throws -> EquipmentReservation {
