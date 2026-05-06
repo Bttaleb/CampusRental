@@ -18,7 +18,7 @@ final class EquipmentViewModel: ObservableObject { // Abstraction + Polymorphism
 
     private let service: EquipmentServiceProvider // DIP — depend on abstraction
 
-    init(service: EquipmentServiceProvider = MockEquipmentService.shared) {
+    init(service: EquipmentServiceProvider = SupabaseEquipmentService()) {
         self.service = service
     }
 
