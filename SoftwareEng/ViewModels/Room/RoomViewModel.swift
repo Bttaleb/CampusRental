@@ -143,6 +143,17 @@ final class RoomViewModel: ObservableObject { // Abstraction + Polymorphism
         Task { await fetchRooms() }
     }
 
+    // MARK: - Availability
+
+    func checkAvailability(roomId: String, date: Date) async -> [TimeSlot] {
+        do {
+            return try await roomService.getAvailability(roomId: roomId, date: date)
+        } catch {
+            errorMessage = error.localizedDescription
+            return []
+        }
+    }
+
     // MARK: - Computed
 
     var upcomingBookings: [RoomBooking] {

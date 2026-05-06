@@ -21,6 +21,9 @@ struct TutorDetailView: View {
     @State private var notes: String = ""
     @State private var showSuccessAlert = false
     @State private var showConfirmationAlert = false
+    @State private var availabilityDate: Date = .now
+    @State private var availabilitySlots: [TimeSlot] = []
+    @State private var isLoadingAvailability = false
 
     // MARK: - Derived
     private var endTime: Date {
@@ -37,6 +40,7 @@ struct TutorDetailView: View {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 header
                 bioSection
+                availabilityCalendar
                 bookingForm
                 bookButton
             }
@@ -49,6 +53,25 @@ struct TutorDetailView: View {
             if selectedSubject.isEmpty {
                 selectedSubject = tutor.subjects.first ?? ""
             }
+        }
+        .task {
+            availabilityDate = startTime
+            await loadAvailability()
+        }
+        .onChange(of: availabilityDate) { _ in
+            Task { await loadAvailability() }
+        }
+        .onChange(of: startTime) { newValue in
+            availabilityDate = newValue
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .rentalDidCancel)) { notification in
+            guard
+                let type = notification.userInfo?["type"] as? String,
+                let resourceId = notification.userInfo?["resourceId"] as? String,
+                type == "tutor",
+                resourceId == tutor.id
+            else { return }
+            Task { await loadAvailability() }
         }
         .alert("Session Booked", isPresented: $showSuccessAlert) {
             Button("OK") { dismiss() }
@@ -157,6 +180,43 @@ struct TutorDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    private var availabilityCalendar: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Availability Calendar")
+                .font(.headline)
+                .foregroundColor(ColorTheme.textPrimary)
+
+            DatePicker(
+                "Date",
+                selection: $availabilityDate,
+                in: Date()...,
+                displayedComponents: [.date]
+            )
+            .datePickerStyle(.graphical)
+
+            if isLoadingAvailability {
+                ProgressView("Loading availability...")
+            } else if unavailableSlots.isEmpty {
+                Label("No reserved times on this date", systemImage: "checkmark.circle")
+                    .foregroundColor(.green)
+            } else {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                    Text("Reserved / Unavailable Times")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(ColorTheme.textPrimary)
+                    ForEach(unavailableSlots) { slot in
+                        Text(slot.formattedTimeRange)
+                            .font(.caption)
+                            .foregroundColor(ColorTheme.textSecondary)
+                    }
+                }
+            }
+        }
+        .padding(Spacing.md)
+        .background(ColorTheme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
     private var bookButton: some View {
         Button {
             showConfirmationAlert = true
@@ -187,11 +247,21 @@ struct TutorDetailView: View {
 
     // MARK: - Actions
 
+    private var unavailableSlots: [TimeSlot] {
+        availabilitySlots.filter { !$0.isAvailable }
+    }
+
     private var confirmationMessage: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return "Book \(selectedSubject) with \(tutor.name) from \(formatter.string(from: startTime)) to \(formatter.string(from: endTime))?"
+    }
+
+    private func loadAvailability() async {
+        isLoadingAvailability = true
+        availabilitySlots = await viewModel.checkAvailability(tutorId: tutor.id, date: availabilityDate)
+        isLoadingAvailability = false
     }
 
     private func book() async {

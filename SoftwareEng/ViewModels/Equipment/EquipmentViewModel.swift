@@ -52,4 +52,13 @@ final class EquipmentViewModel: ObservableObject { // Abstraction + Polymorphism
             return false
         }
     }
+
+    func checkAvailability(equipmentId: String, date: Date) async -> [TimeSlot] {
+        do {
+            return try await service.getEquipmentAvailability(equipmnentId: equipmentId, date: date)
+        } catch {
+            errorMessage = error.localizedDescription
+            return []
+        }
+    }
 }

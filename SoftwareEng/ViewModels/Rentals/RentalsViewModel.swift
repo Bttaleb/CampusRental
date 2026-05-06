@@ -10,6 +10,10 @@ import Foundation
 import SwiftUI
 import Combine
 
+extension Notification.Name {
+    static let rentalDidCancel = Notification.Name("rentalDidCancel")
+}
+
 @MainActor
 final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
     @Published var rentals: [any Rentable] = []
@@ -73,6 +77,7 @@ final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
         do {
             saveSnapshot(label: "Cancel rental")
             try await rental.cancel()
+            postCancellationNotification(for: rental)
             let targetKey = "\(rental.id)"
             rentals.removeAll { "\($0.id)" == targetKey }
         } catch {
@@ -95,6 +100,26 @@ final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
             )
         )
         canUndoLastAction = true
+    }
+
+    private func postCancellationNotification(for rental: any Rentable) {
+        var userInfo: [String: Any] = [:]
+
+        switch rental {
+        case let room as RoomBooking:
+            userInfo["type"] = "room"
+            userInfo["resourceId"] = room.roomId
+        case let equipment as EquipmentReservation:
+            userInfo["type"] = "equipment"
+            userInfo["resourceId"] = equipment.equipmentId
+        case let tutor as TutorSession:
+            userInfo["type"] = "tutor"
+            userInfo["resourceId"] = tutor.tutorId
+        default:
+            userInfo["type"] = "unknown"
+        }
+
+        NotificationCenter.default.post(name: .rentalDidCancel, object: nil, userInfo: userInfo)
     }
 
     private func hydrateEquipmentDetails(in reservations: [EquipmentReservation]) async -> [EquipmentReservation] {
