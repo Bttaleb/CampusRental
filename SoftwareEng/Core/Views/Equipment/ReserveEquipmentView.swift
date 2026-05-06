@@ -16,6 +16,7 @@ struct ReserveEquipmentView: View {
     @State private var startTime: Date = .now.addingTimeInterval(3600)
     @State private var endTime: Date = .now.addingTimeInterval(3600 * 25)
     @State private var purpose: String = ""
+    @State private var showConfirmationAlert = false
 
     var body: some View {
         NavigationStack {
@@ -49,7 +50,7 @@ struct ReserveEquipmentView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
-                        Task { await submit() }
+                        showConfirmationAlert = true
                     } label: {
                         if viewModel.isLoading {
                             ProgressView()
@@ -60,10 +61,25 @@ struct ReserveEquipmentView: View {
                     .disabled(!isValid || viewModel.isLoading)
                 }
             }
+            .alert("Confirm Equipment Reservation", isPresented: $showConfirmationAlert) {
+                Button("Confirm") {
+                    Task { await submit() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(confirmationMessage)
+            }
         }
     }
 
     private var isValid: Bool { endTime > startTime }
+
+    private var confirmationMessage: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return "Reserve \(equipment.name) from \(formatter.string(from: startTime)) to \(formatter.string(from: endTime))?"
+    }
 
     private func submit() async {
         let trimmed = purpose.trimmingCharacters(in: .whitespacesAndNewlines)

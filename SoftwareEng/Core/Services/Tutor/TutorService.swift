@@ -9,6 +9,18 @@
 import Foundation
 import Supabase
 // MARK: OOP — Encapsulation, Abstraction
+
+enum TutorServiceError: LocalizedError {
+    case timeSlotConflict
+
+    var errorDescription: String? {
+        switch self {
+        case .timeSlotConflict:
+            return "This tutor is already booked for that time. Pick a different slot."
+        }
+    }
+}
+
 struct SupabaseTutorService: TutorServiceProvider { // Abstraction — concrete implementation of TutorServiceProvider
     private let client: SupabaseClient // Encapsulation — Supabase client hidden from callers
 
@@ -73,6 +85,13 @@ struct SupabaseTutorService: TutorServiceProvider { // Abstraction — concrete 
     // MARK: - Session Management
 
     func bookSession(request: TutorBookingRequest) async throws -> TutorSession {
+        try await ensureTutorIsAvailable(
+            tutorId: request.tutorId,
+            start: request.startTime,
+            end: request.endTime,
+            excludingSessionId: nil
+        )
+
         return try await client.from("tutor_sessions")
             .insert(request)
             .select()
@@ -102,6 +121,20 @@ struct SupabaseTutorService: TutorServiceProvider { // Abstraction — concrete 
     }
 
     func rescheduleSession(id: String, newStartTime: Date, newEndTime: Date) async throws -> TutorSession {
+        let current: TutorSession = try await client.from("tutor_sessions")
+            .select()
+            .eq("id", value: id)
+            .single()
+            .execute()
+            .value
+
+        try await ensureTutorIsAvailable(
+            tutorId: current.tutorId,
+            start: newStartTime,
+            end: newEndTime,
+            excludingSessionId: id
+        )
+
         let formatter = ISO8601DateFormatter()
         return try await client.from("tutor_sessions")
             .update([
@@ -137,6 +170,39 @@ struct SupabaseTutorService: TutorServiceProvider { // Abstraction — concrete 
             .insert(ratingData)
             .execute()
     }
+
+    // MARK: - Conflict Guard
+
+    private func ensureTutorIsAvailable(
+        tutorId: String,
+        start: Date,
+        end: Date,
+        excludingSessionId: String?
+    ) async throws {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        var query = client.from("tutor_sessions")
+            .select("id")
+            .eq("tutor_id", value: tutorId)
+            .eq("status", value: SessionStatus.scheduled.rawValue)
+            .lt("start_time", value: formatter.string(from: end))
+            .gt("end_time", value: formatter.string(from: start))
+            .limit(20)
+
+        let conflicts: [TutorConflictRow] = try await query.execute().value
+        let hasConflicts = conflicts.contains { conflict in
+            guard let excludingSessionId else { return true }
+            return conflict.id != excludingSessionId
+        }
+        if hasConflicts {
+            throw TutorServiceError.timeSlotConflict
+        }
+    }
+}
+
+private struct TutorConflictRow: Decodable {
+    let id: String
 }
 
 // MARK: - Request Bodies

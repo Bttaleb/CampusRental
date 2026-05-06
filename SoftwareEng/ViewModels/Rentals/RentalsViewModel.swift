@@ -25,7 +25,7 @@ final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
     init(
         tutorService: TutorServiceProvider = SupabaseTutorService(),
         roomService: RoomServiceProvider = SupabaseRoomService(),
-        equipmentService: EquipmentServiceProvider = MockEquipmentService.shared
+        equipmentService: EquipmentServiceProvider = SupabaseEquipmentService()
     ) {
         self.tutorService = tutorService
         self.roomService = roomService
@@ -54,9 +54,11 @@ final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
             firstError = firstError ?? error.localizedDescription
         }
 
+        // Hydrate equipment details for equipment reservations
         do {
             let reservations = try await equipmentService.getUserReservations()
-            collected.append(contentsOf: reservations.map { $0 as any Rentable })
+            let hydratedReservations = await hydrateEquipmentDetails(in: reservations)
+            collected.append(contentsOf: hydratedReservations.map { $0 as any Rentable })
         } catch {
             firstError = firstError ?? error.localizedDescription
         }
@@ -93,6 +95,19 @@ final class RentalsViewModel: ObservableObject { // Abstraction + Polymorphism
             )
         )
         canUndoLastAction = true
+    }
+
+    private func hydrateEquipmentDetails(in reservations: [EquipmentReservation]) async -> [EquipmentReservation] {
+        var result: [EquipmentReservation] = []
+        result.reserveCapacity(reservations.count)
+
+        for var reservation in reservations {
+            if reservation.equipment == nil {
+                reservation.equipment = try? await equipmentService.getEquipment(id: reservation.equipmentId)
+            }
+            result.append(reservation)
+        }
+        return result
     }
 
     var upcoming: [any Rentable] { rentals.filter { $0.isUpcoming } }

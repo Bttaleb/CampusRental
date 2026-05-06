@@ -84,6 +84,12 @@ struct SupabaseRoomService: RoomServiceProvider { // Abstraction — concrete im
     // MARK: - Booking Management
 
     func book(request: RoomBookingRequest) async throws -> RoomBooking {
+        try await ensureRoomIsAvailable(
+            roomId: request.roomId,
+            start: request.startTime,
+            end: request.endTime,
+            excludingBookingId: nil
+        )
         do {
             return try await client.from("room_bookings")
                 .insert(request)
@@ -123,6 +129,20 @@ struct SupabaseRoomService: RoomServiceProvider { // Abstraction — concrete im
     }
 
     func reschedule(id: String, newStartTime: Date, newEndTime: Date) async throws -> RoomBooking {
+        let current: RoomBooking = try await client.from("room_bookings")
+            .select()
+            .eq("id", value: id)
+            .single()
+            .execute()
+            .value
+
+        try await ensureRoomIsAvailable(
+            roomId: current.roomId,
+            start: newStartTime,
+            end: newEndTime,
+            excludingBookingId: id
+        )
+
         let formatter = ISO8601DateFormatter()
         do {
             return try await client.from("room_bookings")
@@ -196,6 +216,39 @@ struct SupabaseRoomService: RoomServiceProvider { // Abstraction — concrete im
             .insert(payload)
             .execute()
     }
+
+    // MARK: - Conflict Guard
+
+    private func ensureRoomIsAvailable(
+        roomId: String,
+        start: Date,
+        end: Date,
+        excludingBookingId: String?
+    ) async throws {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        var query = client.from("room_bookings")
+            .select("id")
+            .eq("room_id", value: roomId)
+            .in("status", values: ["pending", "confirmed"])
+            .lt("start_time", value: formatter.string(from: end))
+            .gt("end_time", value: formatter.string(from: start))
+            .limit(20)
+
+        let conflicts: [BookingConflictRow] = try await query.execute().value
+        let hasConflicts = conflicts.contains { conflict in
+            guard let excludingBookingId else { return true }
+            return conflict.id != excludingBookingId
+        }
+        if hasConflicts {
+            throw RoomServiceError.timeSlotConflict
+        }
+    }
+}
+
+private struct BookingConflictRow: Decodable {
+    let id: String
 }
 
 // MARK: - Request Bodies

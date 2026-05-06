@@ -50,6 +50,14 @@ struct ProfileView: View {
                         showingEditProfile = true
                     }
                 }
+
+                Section("More") {
+                    NavigationLink {
+                        MyRentalsView()
+                    } label: {
+                        Label("Manage Reservations", systemImage: "tray.full")
+                    }
+                }
                 
                 Section {
                     Button("Sign Out", role: .destructive) {
@@ -59,7 +67,7 @@ struct ProfileView: View {
                     }
                 }
             }
-            .navigationTitle("Profile")
+            .navigationTitle("More")
         }
     }
 }

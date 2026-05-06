@@ -35,7 +35,7 @@ struct SoftwareEngApp: App {
         // Wire rental services so Rentable conformers can route cancel/reschedule.
         RentalServices.shared.tutor = SupabaseTutorService()
         RentalServices.shared.room = SupabaseRoomService()
-        RentalServices.shared.equipment = MockEquipmentService.shared
+        RentalServices.shared.equipment = SupabaseEquipmentService()
 
         // Configure navigation bar appearance with WSU Green
         let appearance = UINavigationBarAppearance()

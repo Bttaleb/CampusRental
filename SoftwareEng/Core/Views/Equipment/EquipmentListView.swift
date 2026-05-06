@@ -47,8 +47,9 @@ struct EquipmentListView: View {
     }
 
     private var filteredEquipment: [Equipment] {
-        guard !searchText.isEmpty else { return viewModel.equipment }
-        return viewModel.equipment.filter {
+        let availableEquipment = viewModel.equipment.filter { $0.isAvailable }
+        guard !searchText.isEmpty else { return availableEquipment }
+        return availableEquipment.filter {
             $0.name.localizedCaseInsensitiveContains(searchText)
                 || $0.location.localizedCaseInsensitiveContains(searchText)
                 || $0.category.displayName.localizedCaseInsensitiveContains(searchText)

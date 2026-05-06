@@ -17,6 +17,7 @@ struct BookRoomView: View {
     @State private var endTime: Date = .now.addingTimeInterval(7200)
     @State private var attendees: Int = 1
     @State private var purpose: String = ""
+    @State private var showConfirmationAlert = false
 
     var body: some View {
         NavigationStack {
@@ -52,7 +53,7 @@ struct BookRoomView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
-                        Task { await submit() }
+                        showConfirmationAlert = true
                     } label: {
                         if viewModel.isLoading {
                             ProgressView()
@@ -63,11 +64,26 @@ struct BookRoomView: View {
                     .disabled(!isValid || viewModel.isLoading)
                 }
             }
+            .alert("Confirm Room Booking", isPresented: $showConfirmationAlert) {
+                Button("Confirm") {
+                    Task { await submit() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(confirmationMessage)
+            }
         }
     }
 
     private var isValid: Bool {
         endTime > startTime && attendees >= 1 && attendees <= room.capacity
+    }
+
+    private var confirmationMessage: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return "Book \(room.fullName) for \(attendees) attendee\(attendees > 1 ? "s" : "") from \(formatter.string(from: startTime)) to \(formatter.string(from: endTime))?"
     }
 
     private func submit() async {

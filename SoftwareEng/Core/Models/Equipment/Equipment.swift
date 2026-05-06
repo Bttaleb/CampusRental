@@ -162,7 +162,8 @@ struct EquipmentReservation: Codable, Identifiable, Rentable { // Encapsulation 
     }
 
     var canCancel: Bool {
-        status == .confirmed && startTime.timeIntervalSinceNow > Config.Booking.equipmentCancellationDeadline
+        (status == .confirmed || status == .pending)
+            && startTime.timeIntervalSinceNow > Config.Booking.equipmentCancellationDeadline
     }
 
     var isOverdue: Bool {
@@ -174,7 +175,7 @@ struct EquipmentReservation: Codable, Identifiable, Rentable { // Encapsulation 
     }
 
     var isUpcoming: Bool { // Polymorphism - vary per booking type
-        status == .confirmed && startTime > Date()
+        (status == .confirmed || status == .pending) && startTime > Date()
     }
 
     var displayTitle: String { equipment?.name ?? "Equipment" }

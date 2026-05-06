@@ -47,8 +47,9 @@ struct RoomListView: View {
     }
 
     private var filteredRooms: [StudyRoom] {
-        guard !searchText.isEmpty else { return viewModel.rooms }
-        return viewModel.rooms.filter {
+        let availableRooms = viewModel.rooms.filter { $0.isAvailable }
+        guard !searchText.isEmpty else { return availableRooms }
+        return availableRooms.filter {
             $0.building.localizedCaseInsensitiveContains(searchText)
                 || $0.name.localizedCaseInsensitiveContains(searchText)
                 || $0.roomNumber.localizedCaseInsensitiveContains(searchText)
