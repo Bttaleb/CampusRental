@@ -20,6 +20,7 @@ struct TutorDetailView: View {
     @State private var durationHours: Double = 1
     @State private var notes: String = ""
     @State private var showSuccessAlert = false
+    @State private var showConfirmationAlert = false
 
     // MARK: - Derived
     private var endTime: Date {
@@ -158,7 +159,7 @@ struct TutorDetailView: View {
 
     private var bookButton: some View {
         Button {
-            Task { await book() }
+            showConfirmationAlert = true
         } label: {
             HStack {
                 if viewModel.isLoading {
@@ -174,9 +175,24 @@ struct TutorDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .disabled(!canBook)
+        .alert("Confirm Tutor Session", isPresented: $showConfirmationAlert) {
+            Button("Confirm") {
+                Task { await book() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(confirmationMessage)
+        }
     }
 
     // MARK: - Actions
+
+    private var confirmationMessage: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return "Book \(selectedSubject) with \(tutor.name) from \(formatter.string(from: startTime)) to \(formatter.string(from: endTime))?"
+    }
 
     private func book() async {
         let success = await viewModel.bookSession(
