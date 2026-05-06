@@ -48,6 +48,14 @@ struct MyRentalsView: View {
                 }
             }
             .navigationTitle("My Rentals")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Undo") {
+                        vm.undoLastAction()
+                    }
+                    .disabled(!vm.canUndoLastAction)
+                }
+            }
             .overlay { if vm.isLoading { ProgressView() } }
             .task { await vm.load() }
             .refreshable { await vm.load() }
