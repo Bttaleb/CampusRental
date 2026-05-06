@@ -53,10 +53,13 @@ struct TutorListView: View {
     }
 
     private var filteredTutors: [TutorProfile] {
-        if searchText.isEmpty {
-            return viewModel.tutors
+        let availableTutors = viewModel.tutors.filter { tutor in
+            tutor.isApproved
         }
-        return viewModel.tutors.filter { tutor in
+        if searchText.isEmpty {
+            return availableTutors
+        }
+        return availableTutors.filter { tutor in
             tutor.name.localizedCaseInsensitiveContains(searchText)
                 || tutor.subjects.contains { $0.localizedCaseInsensitiveContains(searchText) }
         }

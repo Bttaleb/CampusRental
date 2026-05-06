@@ -62,19 +62,12 @@ struct MainTabView: View {
                 }
                 .tag(3)
 
-            // My Rentals (unified across tutor, room, equipment via Rentable)
-            MyRentalsView()
-                .tabItem {
-                    Label("Rentals", systemImage: "tray.full")
-                }
-                .tag(4)
-
-            // Profile
+            // More (Profile root with Manage Reservations inside)
             ProfileView()
                 .tabItem {
-                    Label("Profile", systemImage: "person.circle.fill")
+                    Label("More", systemImage: "ellipsis.circle.fill")
                 }
-                .tag(5)
+                .tag(4)
         }
         .accentColor(ColorTheme.wsuGreen)
     }

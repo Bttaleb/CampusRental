@@ -65,8 +65,14 @@ struct SupabaseEquipmentService: EquipmentServiceProvider {
             .execute()
             .value
     }
-    
+    // Ensure equipment is available
     func rent(request: EquipmentReservationRequest) async throws -> EquipmentReservation {
+        try await ensureEquipmentIsAvailable(
+            equipmentId: request.equipmentId,
+            start: request.startTime,
+            end: request.endTime,
+            excludingReservationId: nil
+        )
         do {
             return try await client.from("equipment_reservations")
                 .insert(request)
@@ -104,6 +110,20 @@ struct SupabaseEquipmentService: EquipmentServiceProvider {
     }
     
     func reschedule(id: String, newStartTime: Date, newEndTime: Date) async throws -> EquipmentReservation {
+        let current: EquipmentReservation = try await client.from("equipment_reservations")
+            .select()
+            .eq("id", value: id)
+            .single()
+            .execute()
+            .value
+
+        try await ensureEquipmentIsAvailable(
+            equipmentId: current.equipmentId,
+            start: newStartTime,
+            end: newEndTime,
+            excludingReservationId: id
+        )
+
         let formatter = ISO8601DateFormatter()
         do {
             return try await client.from("equipment_reservations")
@@ -161,6 +181,39 @@ struct SupabaseEquipmentService: EquipmentServiceProvider {
             .insert(payload)
             .execute()
     }
+
+    // MARK: - Conflict Guard
+
+    private func ensureEquipmentIsAvailable(
+        equipmentId: String,
+        start: Date,
+        end: Date,
+        excludingReservationId: String?
+    ) async throws {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        var query = client.from("equipment_reservations")
+            .select("id")
+            .eq("equipment_id", value: equipmentId)
+            .in("status", value: ["pending", "confirmed"])
+            .lt("start_time", value: formatter.string(from: end))
+            .gt("end_time", value: formatter.string(from: start))
+            .limit(20)
+
+        let conflicts: [ReservationConflictRow] = try await query.execute().value
+        let hasConflicts = conflicts.contains { conflict in
+            guard let excludingReservationId else { return true }
+            return conflict.id != excludingReservationId
+        }
+        if hasConflicts {
+            throw EquipmentServiceError.timeSlotConflict
+        }
+    }
+}
+
+private struct ReservationConflictRow: Decodable {
+    let id: String
 }
 
 private struct EquipmentRatingInsert: Encodable {
